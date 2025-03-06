@@ -15,40 +15,61 @@ enum WebServiceError: Error {
 }
 
 class WebService {
+    
     func getRandomImages(ids: [Int]) async throws -> [RandomImage] {
-        var randomImages: [RandomImage] = []
-        for id in ids {
-            let randomImage = try await getRandomImage(id: id)
-            randomImages.append(randomImage)
+        return try await withThrowingTaskGroup(of: RandomImage.self) { group in
+            for id in ids {
+                group.addTask {
+                    return try await self.getRandomImage(id: id)
+                }
+            }
+                
+            var randomImages: [RandomImage] = []
+            for try await image in group {
+                randomImages.append(image)
+            }
+            return randomImages
         }
-        return randomImages
     }
 
-     func getRandomImage(id: Int) async throws -> RandomImage {
+    func getRandomImage(id: Int) async throws -> RandomImage {
         guard let imageUrl = Constants.URLs.getRandomImageURL(id: id) else {
             throw WebServiceError.invalidImageURL
         }
-        
-        async let (imageData, _) = try await URLSession.shared.data(from: imageUrl)
+            
+        async let (imageData, _) = URLSession.shared.data(from: imageUrl)
         async let quote = fetchRandomQuote()
 
-        return RandomImage(id: id, image: try await imageData, quote: try await quote)
+        return RandomImage(
+            id: id,
+            image: try await imageData,
+            quote: try await quote
+        )
     }
 
     private func fetchRandomQuote() async throws -> Quote {
         guard let quoteURL = URL(string: Constants.URLs.randomQuoteBaseURL) else {
             throw WebServiceError.invalidQuoteURL
         }
-        
+            
         var request = URLRequest(url: quoteURL)
-        request.setValue(Constants.APIKeys.quotesAPIKey, forHTTPHeaderField: "X-Api-Key")
-        
+        request
+            .setValue(
+                Constants.APIKeys.quotesAPIKey,
+                forHTTPHeaderField: "X-Api-Key"
+            )
+            
         let (data, _) = try await URLSession.shared.data(for: request)
-        
-        guard let quote = try? JSONDecoder().decode([Quote].self, from: data).first else {
+            
+        do {
+            let quotes = try JSONDecoder().decode([Quote].self, from: data)
+            if let quote = quotes.first {
+                return quote
+            } else {
+                throw WebServiceError.decodingFailed
+            }
+        } catch {
             throw WebServiceError.decodingFailed
         }
-        
-        return quote
     }
 }
