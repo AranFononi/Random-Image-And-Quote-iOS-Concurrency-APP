@@ -12,26 +12,36 @@ import SwiftUI
 class RandomImageListViewModel: ObservableObject {
     
     @Published var randomImages: [RandomImageViewModel] = []
+    private let webService = WebService()
     
     
-    func getRandomImage(ids: [Int]) async throws {
+    func getRandomImage(ids: [Int]) async {
         
-        let webService = WebService()
-        randomImages = []
+        var newRandomImages: [RandomImageViewModel] = []
         
         do {
-            try await withThrowingTaskGroup (of: (Int, RandomImage).self, body: { group in
+            try await withThrowingTaskGroup(of: RandomImageViewModel?.self) { group in
                 for id in ids {
                     group.addTask {
-                        return (id, try await webService.getRandomImage(id: id))
+                        do {
+                            let randomImage = try await self.webService.getRandomImage(id: id)
+                            return RandomImageViewModel(randomImage: randomImage)
+                        } catch {
+                            print("Error fetching image for ID \(id): \(error)")
+                            return nil
+                        }
                     }
                 }
-                for try await (_, randomImage) in group {
-                    randomImages.append(RandomImageViewModel(randomImage: randomImage))
+                
+                for try await result in group {
+                    if let randomImageViewModel = result {
+                        newRandomImages.append(randomImageViewModel)
+                    }
                 }
-            })
+            }
+            self.randomImages = newRandomImages
         } catch {
-            print(error)
+            print("Error in task group: \(error)")
         }
     }
     

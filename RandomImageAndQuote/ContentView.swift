@@ -18,25 +18,20 @@ struct ContentView: View {
                 }
             }
             .refreshable {
-                Task {
-                    try await randomImageListVM
-                        .getRandomImage(ids: Array(100...130))
-                }
+                
+                await randomImageListVM.getRandomImage(ids: Array(100...130))
+                
             }
             .task {
-                do {
-                    try await randomImageListVM
-                        .getRandomImage(ids: Array(100...130))
-                } catch {
-                    print(error)
-                }
+                
+                await randomImageListVM.getRandomImage(ids: Array(100...130))
+                
             }
             .navigationTitle("Random Image/Quote")
             .toolbar {
                 Button(action: {
-                    Task {
-                        try await randomImageListVM
-                            .getRandomImage(ids: Array(100...130))
+                    Task{
+                        await randomImageListVM.getRandomImage(ids: Array(100...130))
                     }
                 }, label: {
                     Image(systemName: "arrow.clockwise.circle")
