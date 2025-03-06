@@ -5,7 +5,7 @@ struct ContentView: View {
     @StateObject private var randomImageListVM = RandomImageListViewModel()
     
     var body: some View {
-        NavigationStack {  // ✅ اضافه کردن NavigationStack
+        NavigationStack {
             List(randomImageListVM.randomImages) { randomImage in
                 HStack {
                     randomImage.image.map {
@@ -15,6 +15,12 @@ struct ContentView: View {
                             .frame(width: 100, height: 100)
                     }
                     Text(randomImage.quote)
+                }
+            }
+            .refreshable {
+                Task {
+                    try await randomImageListVM
+                        .getRandomImage(ids: Array(100...130))
                 }
             }
             .task {
