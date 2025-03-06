@@ -7,6 +7,13 @@
 
 import Foundation
 
+
+enum WebServiceError: Error {
+    case invalidImageURL
+    case invalidQuoteURL
+    case decodingFailed
+}
+
 class WebService {
     func getRandomImages(ids: [Int]) async throws -> [RandomImage] {
         var randomImages: [RandomImage] = []
@@ -19,7 +26,7 @@ class WebService {
 
      func getRandomImage(id: Int) async throws -> RandomImage {
         guard let imageUrl = Constants.URLs.getRandomImageURL(id: id) else {
-            fatalError("Invalid Image URL")
+            throw WebServiceError.invalidImageURL
         }
         
         async let (imageData, _) = try await URLSession.shared.data(from: imageUrl)
@@ -30,7 +37,7 @@ class WebService {
 
     private func fetchRandomQuote() async throws -> Quote {
         guard let quoteURL = URL(string: Constants.URLs.randomQuoteBaseURL) else {
-            throw NSError(domain: "RandomImageAndQuote", code: 1002, userInfo: [NSLocalizedDescriptionKey: "Invalid Quote URL"])
+            throw WebServiceError.invalidQuoteURL
         }
         
         var request = URLRequest(url: quoteURL)
@@ -39,7 +46,7 @@ class WebService {
         let (data, _) = try await URLSession.shared.data(for: request)
         
         guard let quote = try? JSONDecoder().decode([Quote].self, from: data).first else {
-            throw NSError(domain: "RandomImageAndQuote", code: 1003, userInfo: [NSLocalizedDescriptionKey: "Failed to decode quote"])
+            throw WebServiceError.decodingFailed
         }
         
         return quote
