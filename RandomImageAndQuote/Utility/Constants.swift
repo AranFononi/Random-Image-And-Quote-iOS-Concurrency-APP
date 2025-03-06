@@ -15,6 +15,7 @@ struct Constants {
         static let randomQuoteBaseURL: String = "https://api.api-ninjas.com/v1/quotes"
     }
     struct APIKeys {
+#error("Please enter your API Key from api.api-ninjas.com, and delete this.")
         static let quotesAPIKey = "YOURAPIKEY"
     }
 }
