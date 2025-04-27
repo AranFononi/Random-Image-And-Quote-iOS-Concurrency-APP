@@ -38,4 +38,3 @@ This app fetches **random images and quotes** in real-time using APIs. The goal 
 ## 📬 Contact  
 For any questions or collaborations, feel free to reach out:  
 - **Email**: [aranfononi@gmail.com](mailto:aranfononi@gmail.com)  
-- **LinkedIn**: [Aran Fononi](https://www.linkedin.com/in/aran-fononi-18182b265)  
